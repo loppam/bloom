@@ -160,7 +160,7 @@ const Generator = () => {
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   placeholder="Describe your design"
-                  className="prompt-input"
+                  className="prompt-inputt"
                 />
                 <button
                   className="create-button"
