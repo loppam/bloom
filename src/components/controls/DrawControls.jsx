@@ -56,7 +56,10 @@ const DrawControls = ({ canvas }) => {
       const reader = new FileReader();
       reader.onload = (event) => {
         fabric.Image.fromURL(event.target.result, (img) => {
-          img.scaleToWidth(200);
+          img.set({
+            type: "image",
+            scaleToWidth: 200,
+          });
           canvas.add(img);
           canvas.renderAll();
         });
@@ -154,7 +157,10 @@ const DrawControls = ({ canvas }) => {
                 className="variation-item"
                 onClick={() => {
                   fabric.Image.fromURL(image.url, (img) => {
-                    img.scaleToWidth(200);
+                    img.set({
+                      type: "image",
+                      scaleToWidth: 200,
+                    });
                     canvas.add(img);
                     canvas.renderAll();
                   });

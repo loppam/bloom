@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import * as fabric from "fabric";
+import { fabric } from "fabric";
 
 const TextControls = ({ canvas }) => {
   const defaultStyles = [
@@ -50,6 +50,22 @@ const TextControls = ({ canvas }) => {
     }
   };
 
+  const changeFontSize = (size) => {
+    const activeObject = canvas.getActiveObject();
+    if (activeObject && activeObject.type === "i-text") {
+      activeObject.set("fontSize", size);
+      canvas.renderAll();
+    }
+  };
+
+  const changeFontWeight = (weight) => {
+    const activeObject = canvas.getActiveObject();
+    if (activeObject && activeObject.type === "i-text") {
+      activeObject.set("fontWeight", weight);
+      canvas.renderAll();
+    }
+  };
+
   return (
     <div className="control-panel text">
       <div className="text-controls-section">
@@ -77,6 +93,27 @@ const TextControls = ({ canvas }) => {
             </div>
           </button>
         ))}
+      </div>
+
+      <div className="text-controls-section">
+        <h3>Font Size</h3>
+        <input
+          type="range"
+          min="8"
+          max="72"
+          defaultValue="16"
+          onChange={(e) => changeFontSize(parseInt(e.target.value))}
+        />
+      </div>
+
+      <div className="text-controls-section">
+        <h3>Font Weight</h3>
+        <select onChange={(e) => changeFontWeight(e.target.value)}>
+          <option value="300">Light</option>
+          <option value="400">Regular</option>
+          <option value="600">Semi Bold</option>
+          <option value="700">Bold</option>
+        </select>
       </div>
 
       <div className="text-controls-section">

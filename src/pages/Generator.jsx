@@ -3,6 +3,7 @@ import { useState } from "react";
 import { LuWandSparkles } from "react-icons/lu";
 import { HiDownload } from "react-icons/hi";
 import { FiEdit, FiShare2, FiCopy } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
 
 import Cake from "/cake.svg";
 import Money from "/money.svg";
@@ -21,6 +22,8 @@ const Generator = () => {
   const [generatedImages, setGeneratedImages] = useState([]);
   const [copyStatus, setCopyStatus] = useState("");
 
+  const navigate = useNavigate();
+
   const presetPrompts = [
     { icon: <img src={Cake} alt="Cake" />, text: "Create a Birthday flyer" },
     { icon: <img src={Blend} alt="Money" />, text: "Create a Logo" },
@@ -28,11 +31,17 @@ const Generator = () => {
     { icon: <img src={Money} alt="Blend" />, text: "Design Business cards" },
   ];
 
-  const aspectRatioOptions = ["1:1", "16:9", "9:16", "4:3", "3:4", "2:1"];
+  const aspectRatioOptions = ["1:1", "16:9", "9:16"];
 
   const generateImages = async () => {
     if (!prompt) {
       setError("Please enter a prompt");
+      return;
+    }
+
+    const supportedRatios = ["1:1", "16:9", "9:16"];
+    if (!supportedRatios.includes(aspectRatio)) {
+      setError("Please select a supported aspect ratio (1:1, 16:9, or 9:16)");
       return;
     }
 
@@ -50,7 +59,9 @@ const Generator = () => {
           },
           body: JSON.stringify({
             prompt: prompt,
-            n: 3, // Generate 3 images
+            n: 1,
+            model: "dall-e-3",
+            quality: "standard",
             size: getImageSize(aspectRatio),
             response_format: "url",
           }),
@@ -62,8 +73,8 @@ const Generator = () => {
       }
 
       const data = await response.json();
-      setGeneratedImages(data.data); // OpenAI returns array of image URLs
-      setGeneratedDesigns(data.data); // Update the existing state as well
+      setGeneratedImages(data.data);
+      setGeneratedDesigns(data.data);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -71,15 +82,12 @@ const Generator = () => {
     }
   };
 
-  // Helper function to convert aspect ratio to OpenAI image size
+  // Update the getImageSize function for DALL-E 3 supported sizes
   const getImageSize = (ratio) => {
     const sizes = {
       "1:1": "1024x1024",
       "16:9": "1792x1024",
       "9:16": "1024x1792",
-      "4:3": "1024x768",
-      "3:4": "768x1024",
-      "2:1": "1024x512",
     };
     return sizes[ratio] || "1024x1024";
   };
@@ -108,9 +116,37 @@ const Generator = () => {
     }
   };
 
-  const handleEdit = (image) => {
-    // Add edit functionality here
-    console.log("Edit image:", image);
+  const handleEdit = async (image) => {
+    try {
+      const proxyUrl = `/api/proxy-image?imageUrl=${encodeURIComponent(
+        image.url
+      )}`;
+      const response = await fetch(proxyUrl);
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch image");
+      }
+
+      const blob = await response.blob();
+      const base64 = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
+
+      navigate("/editor", {
+        state: {
+          imageUrl: base64,
+          imageType: "image",
+          crossOrigin: "anonymous",
+        },
+      });
+    } catch (error) {
+      console.error("Error processing image:", error);
+      setError(
+        "Unable to edit image. Please try refreshing the page or generating a new image."
+      );
+    }
   };
 
   const handleShare = async (imageUrl) => {

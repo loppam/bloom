@@ -1,7 +1,25 @@
-/* eslint-disable no-unused-vars */
 import PropTypes from "prop-types";
+import { fabric } from "fabric";
+import { useState, useEffect } from "react";
 
-const BackgroundControls = (/* { canvas } */) => {
+const BackgroundControls = ({ canvas }) => {
+  const [showColorPalette, setShowColorPalette] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const colors = [
+    "#F5F0FF", // Light Purple
+    "#FFE4E4", // Light Red
+    "#E4FFE4", // Light Green
+    "#E4E4FF", // Light Blue
+    "#FFFFE4", // Light Yellow
+    "#FFE4FF", // Light Pink
+    "#FFFFFF", // White
+    "#F5F5F5", // Light Gray
+    "#E0E0E0", // Gray
+    "#393939", // Dark Gray
+  ];
+
   // console.log("BackgroundControls rendering", canvas);
 
   // if (!canvas) {
@@ -9,11 +27,137 @@ const BackgroundControls = (/* { canvas } */) => {
   //   return null;
   // }
 
+  useEffect(() => {
+    if (!canvas) return;
+
+    const handleSelection = (e) => {
+      const selected = e.target;
+      console.log("Selected object:", selected);
+      console.log("Object type:", selected?.type);
+      if (selected && selected.type === "image") {
+        console.log("Setting selected image");
+        setSelectedImage(selected);
+      } else {
+        setSelectedImage(null);
+      }
+    };
+
+    canvas.on("selection:created", handleSelection);
+    canvas.on("selection:updated", handleSelection);
+    canvas.on("selection:cleared", () => setSelectedImage(null));
+
+    return () => {
+      canvas.off("selection:created", handleSelection);
+      canvas.off("selection:updated", handleSelection);
+      canvas.off("selection:cleared");
+    };
+  }, [canvas]);
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        fabric.Image.fromURL(event.target.result, (img) => {
+          canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas), {
+            scaleX: canvas.width / img.width,
+            scaleY: canvas.height / img.height,
+            crossOrigin: "anonymous",
+          });
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const setTransparentBackground = () => {
+    setShowColorPalette(false);
+    canvas.setBackgroundColor("", () => canvas.renderAll());
+  };
+
+  const setColorBackground = (color) => {
+    canvas.setBackgroundColor(color, () => canvas.renderAll());
+  };
+
+  const replaceBackground = () => {
+    setShowColorPalette(false);
+    canvas.setBackgroundImage(null, () => {
+      canvas.setBackgroundColor("#FFFFFF", () => canvas.renderAll());
+    });
+  };
+
+  const removeBackground = () => {
+    setShowColorPalette(false);
+    canvas.setBackgroundImage(null, () => {
+      canvas.setBackgroundColor("", () => canvas.renderAll());
+    });
+  };
+
+  const removeImageBackground = async () => {
+    if (!selectedImage) return;
+
+    setIsProcessing(true);
+    try {
+      const response = await fetch("https://api.remove.bg/v1.0/removebg", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Api-Key": import.meta.env.VITE_REMOVEBG_API_KEY,
+        },
+        body: JSON.stringify({
+          image_url: selectedImage.getSrc(),
+          size: "regular",
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to remove background");
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+
+      fabric.Image.fromURL(url, (img) => {
+        img.set({
+          left: selectedImage.left,
+          top: selectedImage.top,
+          scaleX: selectedImage.scaleX,
+          scaleY: selectedImage.scaleY,
+        });
+        canvas.remove(selectedImage);
+        canvas.add(img);
+        canvas.renderAll();
+        URL.revokeObjectURL(url);
+      });
+    } catch (err) {
+      console.error("Error removing background:", err);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   return (
     <div className="control-panel">
       <div className="background-styles">
+        {selectedImage && (
+          <button
+            className="remove-bg-btn"
+            onClick={removeImageBackground}
+            disabled={isProcessing}
+          >
+            {isProcessing ? "Processing..." : "Remove Image Background"}
+          </button>
+        )}
+
         <div className="upload">
-          <button>
+          <input
+            type="file"
+            id="bgImageUpload"
+            accept="image/*"
+            style={{ display: "none" }}
+            onChange={handleImageUpload}
+          />
+          <button
+            onClick={() => document.getElementById("bgImageUpload").click()}
+          >
             <svg
               width="13"
               height="14"
@@ -32,7 +176,7 @@ const BackgroundControls = (/* { canvas } */) => {
         </div>
         <h4>Default styles</h4>
         <div className="style-options">
-          <button className="style-btn">
+          <button className="style-btn" onClick={setTransparentBackground}>
             <svg
               width="22"
               height="22"
@@ -49,32 +193,51 @@ const BackgroundControls = (/* { canvas } */) => {
             <span>Transparent</span>
           </button>
 
-          <button className="style-btn">
-            <svg
-              width="24"
-              height="25"
-              viewBox="0 0 24 25"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+          <div className="color-button-container">
+            <button
+              className="style-btn"
+              onClick={() => setShowColorPalette(!showColorPalette)}
             >
-              <path
-                d="M14 16.5C14 18.27 13.23 19.87 12 20.96C10.94 21.92 9.54 22.5 8 22.5C4.69 22.5 2 19.81 2 16.5C2 13.74 3.88 11.4 6.42 10.71C7.11 12.45 8.59 13.79 10.42 14.29C10.92 14.43 11.45 14.5 12 14.5C12.55 14.5 13.08 14.43 13.58 14.29C13.85 14.97 14 15.72 14 16.5Z"
-                className="icon-path"
-              />
-              <path
-                d="M18 8.5C18 9.28 17.85 10.03 17.58 10.71C16.89 12.45 15.41 13.79 13.58 14.29C13.08 14.43 12.55 14.5 12 14.5C11.45 14.5 10.92 14.43 10.42 14.29C8.59 13.79 7.11 12.45 6.42 10.71C6.15 10.03 6 9.28 6 8.5C6 5.19 8.69 2.5 12 2.5C15.31 2.5 18 5.19 18 8.5Z"
-                className="icon-path"
-              />
-              <path
-                d="M22 16.5C22 19.81 19.31 22.5 16 22.5C14.46 22.5 13.06 21.92 12 20.96C13.23 19.87 14 18.27 14 16.5C14 15.72 13.85 14.97 13.58 14.29C15.41 13.79 16.89 12.45 17.58 10.71C20.12 11.4 22 13.74 22 16.5Z"
-                className="icon-path"
-              />
-            </svg>
+              <svg
+                width="24"
+                height="25"
+                viewBox="0 0 24 25"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M14 16.5C14 18.27 13.23 19.87 12 20.96C10.94 21.92 9.54 22.5 8 22.5C4.69 22.5 2 19.81 2 16.5C2 13.74 3.88 11.4 6.42 10.71C7.11 12.45 8.59 13.79 10.42 14.29C10.92 14.43 11.45 14.5 12 14.5C12.55 14.5 13.08 14.43 13.58 14.29C13.85 14.97 14 15.72 14 16.5Z"
+                  className="icon-path"
+                />
+                <path
+                  d="M18 8.5C18 9.28 17.85 10.03 17.58 10.71C16.89 12.45 15.41 13.79 13.58 14.29C13.08 14.43 12.55 14.5 12 14.5C11.45 14.5 10.92 14.43 10.42 14.29C8.59 13.79 7.11 12.45 6.42 10.71C6.15 10.03 6 9.28 6 8.5C6 5.19 8.69 2.5 12 2.5C15.31 2.5 18 5.19 18 8.5Z"
+                  className="icon-path"
+                />
+                <path
+                  d="M22 16.5C22 19.81 19.31 22.5 16 22.5C14.46 22.5 13.06 21.92 12 20.96C13.23 19.87 14 18.27 14 16.5C14 15.72 13.85 14.97 13.58 14.29C15.41 13.79 16.89 12.45 17.58 10.71C20.12 11.4 22 13.74 22 16.5Z"
+                  className="icon-path"
+                />
+              </svg>
+              <span>Color</span>
+            </button>
+            {showColorPalette && (
+              <div className="color-palette">
+                {colors.map((color, index) => (
+                  <div
+                    key={index}
+                    className="color-option"
+                    style={{ backgroundColor: color }}
+                    onClick={() => {
+                      setColorBackground(color);
+                      setShowColorPalette(false);
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
 
-            <span>Color</span>
-          </button>
-
-          <button className="style-btn">
+          <button className="style-btn" onClick={replaceBackground}>
             <svg
               width="24"
               height="25"
@@ -100,13 +263,7 @@ const BackgroundControls = (/* { canvas } */) => {
           </button>
         </div>
 
-        <button
-          className="remove-bg-btn"
-          // onClick={() => {
-          //   canvas.setBackgroundImage(null, () => canvas.renderAll());
-          //   canvas.setBackgroundColor("", () => canvas.renderAll());
-          // }}
-        >
+        <button className="remove-bg-btn" onClick={removeBackground}>
           Remove Background
         </button>
       </div>
@@ -114,8 +271,8 @@ const BackgroundControls = (/* { canvas } */) => {
   );
 };
 
-// BackgroundControls.propTypes = {
-//   canvas: PropTypes.object.isRequired,
-// };
+BackgroundControls.propTypes = {
+  canvas: PropTypes.object.isRequired,
+};
 
 export default BackgroundControls;

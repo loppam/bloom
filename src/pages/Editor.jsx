@@ -8,16 +8,19 @@ import DrawControls from "../components/controls/DrawControls";
 import ElementsControls from "../components/controls/ElementsControls";
 import BackgroundControls from "../components/controls/BackgroundControls";
 import AspectControls from "../components/controls/AspectControls";
+import { useLocation } from "react-router-dom";
 // import Home from "/home-2.svg"
 
 const Editor = () => {
   const [canvas, setCanvas] = useState(null);
   const [activeTab, setActiveTab] = useState("home");
   const [error, setError] = useState(null);
+  const location = useLocation();
   const [contextMenu, setContextMenu] = useState({
     visible: false,
     x: 0,
     y: 0,
+    target: null,
   });
 
   const handleTabClick = (tabId) => {
@@ -39,10 +42,25 @@ const Editor = () => {
         container.innerHTML = ""; // Clear any existing content
         container.appendChild(canvasEl);
 
-        // Calculate dimensions
+        // Calculate dimensions while maintaining aspect ratio
         const padding = 40;
-        const width = container.clientWidth - padding;
-        const height = container.clientHeight - padding;
+        const containerWidth = container.clientWidth - padding;
+        const containerHeight = container.clientHeight - padding;
+
+        // Default to 1:1 aspect ratio if not specified
+        const aspectRatio = 1;
+
+        // Calculate dimensions that fit the container while maintaining aspect ratio
+        let width, height;
+        if (containerWidth / aspectRatio <= containerHeight) {
+          // Width is the limiting factor
+          width = containerWidth;
+          height = containerWidth / aspectRatio;
+        } else {
+          // Height is the limiting factor
+          height = containerHeight;
+          width = height * aspectRatio;
+        }
 
         // Initialize Fabric canvas
         fabricCanvas = new fabric.Canvas("canvas", {
@@ -56,8 +74,18 @@ const Editor = () => {
 
         // Handle window resize
         const handleResize = () => {
-          const newWidth = container.clientWidth - padding;
-          const newHeight = container.clientHeight - padding;
+          const newContainerWidth = container.clientWidth - padding;
+          const newContainerHeight = container.clientHeight - padding;
+
+          let newWidth, newHeight;
+          if (newContainerWidth / aspectRatio <= newContainerHeight) {
+            newWidth = newContainerWidth;
+            newHeight = newContainerWidth / aspectRatio;
+          } else {
+            newHeight = newContainerHeight;
+            newWidth = newHeight * aspectRatio;
+          }
+
           fabricCanvas.setDimensions({
             width: newWidth,
             height: newHeight,
@@ -90,7 +118,7 @@ const Editor = () => {
     if (!canvas) return;
 
     const handleContextMenu = (e) => {
-      e.preventDefault(); // Prevent default browser context menu
+      e.preventDefault();
       const target = canvas.findTarget(e);
       if (target) {
         canvas.setActiveObject(target);
@@ -98,12 +126,13 @@ const Editor = () => {
           visible: true,
           x: e.clientX,
           y: e.clientY,
+          target: target,
         });
       }
     };
 
     const handleClick = () => {
-      setContextMenu({ visible: false, x: 0, y: 0 });
+      setContextMenu({ visible: false, x: 0, y: 0, target: null });
     };
 
     // Add the event listener to the canvas container instead of just the canvas element
@@ -116,6 +145,42 @@ const Editor = () => {
       document.removeEventListener("click", handleClick);
     };
   }, [canvas]);
+
+  useEffect(() => {
+    if (!canvas) return;
+
+    const imageUrl = location.state?.imageUrl;
+
+    if (imageUrl) {
+      // For base64 images, we don't need additional CORS settings
+      const options = imageUrl.startsWith("data:")
+        ? {}
+        : { crossOrigin: "anonymous" };
+
+      fabric.Image.fromURL(
+        imageUrl,
+        (img) => {
+          const canvasWidth = canvas.width;
+          const canvasHeight = canvas.height;
+          const scale = Math.min(
+            (canvasWidth * 0.8) / img.width,
+            (canvasHeight * 0.8) / img.height
+          );
+
+          img.scale(scale);
+          img.set({
+            type: "image",
+            left: (canvasWidth - img.width * scale) / 2,
+            top: (canvasHeight - img.height * scale) / 2,
+          });
+
+          canvas.add(img);
+          canvas.renderAll();
+        },
+        options
+      );
+    }
+  }, [canvas, location.state?.imageUrl]);
 
   const handleLayerOrder = (action) => {
     const activeObject = canvas.getActiveObject();
@@ -136,7 +201,76 @@ const Editor = () => {
         break;
     }
     canvas.renderAll();
-    setContextMenu({ visible: false, x: 0, y: 0 });
+    setContextMenu({ visible: false, x: 0, y: 0, target: null });
+  };
+
+  const handleDeleteObject = () => {
+    if (contextMenu.target) {
+      canvas.remove(contextMenu.target);
+      canvas.renderAll();
+      setContextMenu({ visible: false, x: 0, y: 0, target: null });
+    }
+  };
+
+  const handleRemoveBackground = async () => {
+    if (!contextMenu.target || contextMenu.target.type !== "image") return;
+
+    try {
+      // Convert image to base64
+      const imageData = contextMenu.target.toDataURL({
+        format: "png",
+      });
+      const base64Data = imageData.replace(/^data:image\/\w+;base64,/, "");
+
+      const response = await fetch("https://api.remove.bg/v1.0/removebg", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Api-Key": import.meta.env.VITE_REMOVEBG_API_KEY,
+        },
+        body: JSON.stringify({
+          image_file_b64: base64Data,
+          size: "regular",
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to remove background");
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+
+      fabric.Image.fromURL(url, (img) => {
+        img.set({
+          left: contextMenu.target.left,
+          top: contextMenu.target.top,
+          scaleX: contextMenu.target.scaleX,
+          scaleY: contextMenu.target.scaleY,
+        });
+        canvas.remove(contextMenu.target);
+        canvas.add(img);
+        canvas.renderAll();
+        URL.revokeObjectURL(url);
+      });
+    } catch (err) {
+      console.error("Error removing background:", err);
+    }
+    setContextMenu({ visible: false, x: 0, y: 0, target: null });
+  };
+
+  const handleDownload = () => {
+    if (!canvas) return;
+
+    const dataURL = canvas.toDataURL({
+      format: "png",
+      quality: 1,
+    });
+
+    const link = document.createElement("a");
+    link.download = "canvas-design.png";
+    link.href = dataURL;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const renderControls = () => {
@@ -326,14 +460,36 @@ const Editor = () => {
       label: "Aspect Ratio",
     },
     {
-      id: "hidden1",
-      icon: null,
-      label: null,
-    },
-    {
-      id: "hidden2",
-      icon: null,
-      label: null,
+      id: "download",
+      icon: (
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            className="icon-path"
+            d="M8.0625 10.3125L12 14.25L15.9375 10.3125"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            className="icon-path"
+            d="M12 3.75V14.25"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            className="icon-path"
+            d="M20.25 14.25V19.5C20.25 19.6989 20.171 19.8897 20.0303 20.0303C19.8897 20.171 19.6989 20.25 19.5 20.25H4.5C4.30109 20.25 4.11032 20.171 3.96967 20.0303C3.82902 19.8897 3.75 19.6989 3.75 19.5V14.25"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      ),
+      label: "Download",
     },
   ];
 
@@ -348,7 +504,13 @@ const Editor = () => {
           <div
             key={item.id}
             className={`sidebar-items ${item.icon ? "" : "invisible"}`}
-            onClick={() => handleTabClick(item.id)}
+            onClick={() => {
+              if (item.id === "download") {
+                handleDownload();
+              } else {
+                handleTabClick(item.id);
+              }
+            }}
           >
             <div
               className={`sidebar-item ${
@@ -372,6 +534,14 @@ const Editor = () => {
           className="canvas-context-menu"
           style={{ left: contextMenu.x, top: contextMenu.y }}
         >
+          {contextMenu.target?.type === "image" && (
+            <div className="context-menu-item" onClick={handleRemoveBackground}>
+              Remove Background
+            </div>
+          )}
+          <div className="context-menu-item" onClick={handleDeleteObject}>
+            Delete
+          </div>
           <div
             className="context-menu-item"
             onClick={() => handleLayerOrder("front")}

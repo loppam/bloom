@@ -2813,3 +2813,229 @@ html {
 .context-menu-item:hover {
   background: #f3f4f6;
 }
+
+.color-button-container {
+  position: relative;
+  width: 100%;
+  max-width: 92px;
+}
+
+.color-palette {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 200px;
+  background: white;
+  padding: 8px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+  z-index: 1000;
+}
+
+.color-option {
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.color-option:hover {
+  transform: scale(1.1);
+}
+
+.background-styles {
+  position: relative;
+}
+
+.remove-bg-btn {
+  margin-bottom: 16px;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.remove-bg-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.waitlist-page {
+  display: flex;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.waitlist-page::before {
+  content: "";
+  position: absolute;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  filter: blur(100px);
+  top: 80vh;
+  right: 0px;
+  background: radial-gradient(circle, #4827eb9a 0%, #8853c4 70%, #3d6fdb 100%);
+  background-size: 200% 200%;
+  animation: gradientShift 15s ease infinite;
+}
+
+.waitlist-page::after {
+  content: "";
+  position: absolute;
+  width: 230px;
+  height: 230px;
+  border-radius: 50%;
+  filter: blur(120px);
+  bottom: 80vh;
+  left: 0px;
+  background: radial-gradient(circle, #4827eb9a 0%, #8853c4 50%, #3d6fdb 100%);
+  background-size: 200% 200%;
+  animation: gradientShift 15s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.waitlist-page__left {
+  flex: 1;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+}
+
+.waitlist-page__logo {
+  width: 128px;
+  margin-bottom: 80px;
+}
+
+.waitlist-page__content {
+  max-width: 450px;
+}
+
+.waitlist-page__title {
+  font-size: 36px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #1a1a1a;
+  font-family: "PP Neue Montreal", sans-serif;
+}
+
+.waitlist-page__description {
+  color: #666;
+  margin-bottom: 32px;
+  font-family: "PP Neue Montreal", sans-serif;
+  line-height: 1.5;
+}
+
+.waitlist-page__form {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.waitlist-page__input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  border-top: 0;
+  border-left: 0;
+  border-right: 0;
+  font-size: 16px;
+  font-family: "PP Neue Montreal", sans-serif;
+}
+
+.waitlist-page__input:focus {
+  outline: none;
+  border-color: #8b5cf6;
+}
+
+.waitlist-page__submit {
+  padding: 12px 24px;
+  background-color: #1a1a1a;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-family: "PP Neue Montreal", sans-serif;
+}
+
+.waitlist-page__submit:hover {
+  background-color: #333;
+}
+
+.waitlist-page__social {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.waitlist-page__avatars {
+  display: flex;
+}
+
+.waitlist-page__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid white;
+  margin-left: -8px;
+}
+
+.waitlist-page__avatar:first-child {
+  margin-left: 0;
+}
+
+.waitlist-page__count {
+  font-size: 14px;
+  color: #666;
+  font-family: "PP Neue Montreal", sans-serif;
+}
+
+.waitlist-page__right {
+  flex: 1;
+}
+
+.waitlist-page__hero {
+  width: 95%;
+  height: 100%;
+  object-fit: contain;
+}
+.waitlist-page__message {
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 8px;
+  text-align: center;
+  font-family: "PP Neue Montreal", sans-serif;
+}
+
+.waitlist-page__message--success {
+  background-color: #e6f4ea;
+  color: #1e4620;
+}
+
+.waitlist-page__message--error {
+  background-color: #fce8e6;
+  color: #c5221f;
+}
+
+.waitlist-page__submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
