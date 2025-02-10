@@ -8,7 +8,7 @@ import DrawControls from "../components/controls/DrawControls";
 import ElementsControls from "../components/controls/ElementsControls";
 import BackgroundControls from "../components/controls/BackgroundControls";
 import AspectControls from "../components/controls/AspectControls";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 // import Home from "/home-2.svg"
 
 const Editor = () => {
@@ -16,6 +16,7 @@ const Editor = () => {
   const [activeTab, setActiveTab] = useState("home");
   const [error, setError] = useState(null);
   const location = useLocation();
+  const navigate = useNavigate();
   const [contextMenu, setContextMenu] = useState({
     visible: false,
     x: 0,
@@ -26,6 +27,26 @@ const Editor = () => {
   const handleTabClick = (tabId) => {
     setActiveTab((currentTab) => (currentTab === tabId ? "home" : tabId));
   };
+
+  useEffect(() => {
+    // Check if user came from generator (will have imageUrl in state)
+    // OR if there's an imageUrl in the history state
+    if (location.state?.imageUrl || navigate.state?.usr?.imageUrl) {
+      // Set a timeout to redirect after 3 seconds
+      const redirectTimer = setTimeout(() => {
+        navigate("/waitlist", {
+          replace: true,
+          state: {
+            message:
+              "The editor is currently in beta. Join our waitlist to get early access!",
+          },
+        });
+      }, 3000); // 3 seconds delay
+
+      // Cleanup the timer if component unmounts
+      return () => clearTimeout(redirectTimer);
+    }
+  }, [location.state, navigate]);
 
   useEffect(() => {
     let fabricCanvas = null;

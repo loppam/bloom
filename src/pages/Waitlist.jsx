@@ -2,10 +2,15 @@ import { useState } from "react";
 import logo from "/logoblack.svg";
 import { db } from "../firebase/config";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { useLocation } from "react-router-dom";
 
 const Waitlist = () => {
+  const location = useLocation();
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState({ type: "", message: "" });
+  const [status, setStatus] = useState({
+    type: "",
+    message: location.state?.message || "",
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
