@@ -1571,6 +1571,7 @@ html {
       .how,
       .what,
       .everyone,
+      .waitlist-page,
       .ready,
       .footer,
       .loader,
@@ -3082,5 +3083,85 @@ html {
   .avatar {
     width: 30px;
     height: 30px;
+  }
+}
+@media (max-width: 768px) {
+  .waitlist-page {
+    flex-direction: column;
+    height: auto;
+    padding: 20px;
+  }
+
+  .waitlist-page__left {
+    padding: 16px;
+    order: 2;
+  }
+
+  .waitlist-page__right {
+    display: none;
+  }
+
+  .waitlist-page__logo {
+    width: 100px;
+    margin-bottom: 40px;
+  }
+
+  .waitlist-page__content {
+    max-width: 100%;
+  }
+
+  .waitlist-page__title {
+    font-size: 28px;
+    line-height: 1.3;
+  }
+
+  .waitlist-page__description {
+    font-size: 16px;
+  }
+
+  .waitlist-page__form {
+    flex-direction: column;
+  }
+
+  .waitlist-page__input {
+    width: 100%;
+  }
+
+  .waitlist-page__submit {
+    width: 100%;
+  }
+
+  .waitlist-page__hero {
+    width: 100%;
+    height: auto;
+    max-height: 300px;
+  }
+}
+
+@media (max-width: 480px) {
+  .waitlist-page {
+    padding: 16px;
+  }
+
+  .waitlist-page__title {
+    font-size: 24px;
+  }
+
+  .waitlist-page__description {
+    font-size: 14px;
+  }
+
+  .waitlist-page__hero {
+    max-height: 200px;
+  }
+
+  .waitlist-page__social {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .waitlist-page__count {
+    font-size: 12px;
   }
 }

@@ -15,10 +15,11 @@ import Waitlist from "./pages/Waitlist";
 const AppContent = () => {
   const location = useLocation();
   const isLandingPage = location.pathname === "/";
+  const isWaitlistPage = location.pathname === "/waitlist";
 
   return (
     <>
-      {!isLandingPage && <FallbackMessage />}
+      {(!isLandingPage && !isWaitlistPage) && <FallbackMessage />}
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/waitlist" element={<Waitlist />} />
