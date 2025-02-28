@@ -22,67 +22,19 @@ const DrawControls = ({ canvas }) => {
     setError(null);
 
     try {
-      const response = await fetch(
-        "https://api.openai.com/v1/images/generations",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
+      // Simulate loading for a better user experience
+      setTimeout(() => {
+        setIsLoading(false);
+        navigate("/waitlist", {
+          replace: true,
+          state: {
+            message:
+              "The editor is currently in beta. Join our waitlist to get early access!",
           },
-          body: JSON.stringify({
-            prompt: prompt,
-            n: 1,
-            model: "dall-e-3",
-            quality: "standard",
-            size: "1024x1024",
-            response_format: "url",
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to generate images");
-      }
-
-      const data = await response.json();
-      setGeneratedImages(data.data);
-
-      // Add the first generated image to canvas
-      if (data.data && data.data[0]) {
-        fabric.Image.fromURL(data.data[0].url, (img) => {
-          const canvasWidth = canvas.width;
-          const canvasHeight = canvas.height;
-          const scale = Math.min(
-            (canvasWidth * 0.8) / img.width,
-            (canvasHeight * 0.8) / img.height
-          );
-
-          img.scale(scale);
-          img.set({
-            type: "image",
-            left: (canvasWidth - img.width * scale) / 2,
-            top: (canvasHeight - img.height * scale) / 2,
-          });
-
-          canvas.add(img);
-          canvas.renderAll();
-
-          // Redirect to waitlist after 3 seconds
-          setTimeout(() => {
-            navigate("/waitlist", {
-              replace: true,
-              state: {
-                message:
-                  "The editor is currently in beta. Join our waitlist to get early access!",
-              },
-            });
-          }, 3000);
         });
-      }
+      }, 5000);
     } catch (err) {
       setError(err.message);
-    } finally {
       setIsLoading(false);
     }
   };

@@ -24,7 +24,7 @@ const How = () => {
               </div>
             </div>
             <div className="image">
-              <img src={dreamit} alt="dreamit" />
+              <img src={dreamit} alt="dreamit" className="it" />
             </div>
           </div>
           <div className="flex">
@@ -38,7 +38,7 @@ const How = () => {
                 </div>
               </div>
               <div className="image">
-                <img src={editit} alt="editit" />
+                <img src={editit} alt="editit" className="it" />
               </div>
             </div>
             <div className="shareit">
@@ -51,7 +51,7 @@ const How = () => {
                 </div>
               </div>
               <div className="image">
-                <img src={shareit} alt="shareit" />
+                <img src={shareit} alt="shareit" className="it" />
               </div>
             </div>
           </div>

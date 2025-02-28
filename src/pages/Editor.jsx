@@ -29,26 +29,6 @@ const Editor = () => {
   };
 
   useEffect(() => {
-    // Check if user came from generator (will have imageUrl in state)
-    // OR if there's an imageUrl in the history state
-    if (location.state?.imageUrl || navigate.state?.usr?.imageUrl) {
-      // Set a timeout to redirect after 3 seconds
-      const redirectTimer = setTimeout(() => {
-        navigate("/waitlist", {
-          replace: true,
-          state: {
-            message:
-              "The editor is currently in beta. Join our waitlist to get early access!",
-          },
-        });
-      }, 3000); // 3 seconds delay
-
-      // Cleanup the timer if component unmounts
-      return () => clearTimeout(redirectTimer);
-    }
-  }, [location.state, navigate]);
-
-  useEffect(() => {
     let fabricCanvas = null;
 
     const initCanvas = () => {

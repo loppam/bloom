@@ -39,49 +39,66 @@ const Generator = () => {
       return;
     }
 
-    const supportedRatios = ["1:1", "16:9", "9:16"];
-    if (!supportedRatios.includes(aspectRatio)) {
-      setError("Please select a supported aspect ratio (1:1, 16:9, or 9:16)");
-      return;
-    }
+    // const supportedRatios = ["1:1", "16:9", "9:16"];
+    // if (!supportedRatios.includes(aspectRatio)) {
+    //   setError("Please select a supported aspect ratio (1:1, 16:9, or 9:16)");
+    //   return;
+    // }
 
     setIsLoading(true);
     setError(null);
 
-    try {
-      const response = await fetch(
-        "https://api.openai.com/v1/images/generations",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
-          },
-          body: JSON.stringify({
-            prompt: prompt,
-            n: 1,
-            model: "dall-e-3",
-            quality: "standard",
-            size: getImageSize(aspectRatio),
-            response_format: "url",
-          }),
-        }
-      );
+  //   try {
+  //     const response = await fetch(
+  //       "https://api.openai.com/v1/images/generations",
+  //       {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           Authorization: `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
+  //         },
+  //         body: JSON.stringify({
+  //           prompt: prompt,
+  //           n: 1,
+  //           model: "dall-e-3",
+  //           quality: "standard",
+  //           size: getImageSize(aspectRatio),
+  //           response_format: "url",
+  //         }),
+  //       }
+  //     );
 
-      if (!response.ok) {
-        throw new Error("Failed to generate images");
-      }
+  //     if (!response.ok) {
+  //       throw new Error("Failed to generate images");
+  //     }
 
-      const data = await response.json();
-      setGeneratedImages(data.data);
-      setGeneratedDesigns(data.data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
+  //     const data = await response.json();
+  //     setGeneratedImages(data.data);
+  //     setGeneratedDesigns(data.data);
+  //   } catch (err) {
+  //     setError(err.message);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+    if (!prompt) {
+      setError("Please enter a prompt");
+      return;
     }
+  
+    setIsLoading(true);
+    setError(null);
+  
+    // Set a timeout to simulate API call
+    setTimeout(() => {
+      setIsLoading(false);
+      navigate("/waitlist", {
+        state: {
+          message: "Join our waitlist to start creating amazing AI-generated designs!",
+        },
+      });
+    }, 5000);
   };
-
   // Update the getImageSize function for DALL-E 3 supported sizes
   const getImageSize = (ratio) => {
     const sizes = {

@@ -222,6 +222,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  z-index: 10;
 }
 
 .why .color {
@@ -379,9 +380,8 @@ body {
   gap: 24px;
   width: 100%;
 }
-.how .flex img {
+.how .flex img.it {
   max-width: 500px;
-  padding: 20px;
 }
 .share {
   width: 44px;
@@ -1178,16 +1178,27 @@ button:active {
   }
 
   .nav-buttons {
-    flex-direction: column;
-    width: 100%;
-    gap: 10px;
+    flex-direction: row; /* Stack buttons vertically */
+    width: 100%; /* Full width */
+    align-items: center; /* Center align buttons */
+    gap: 10px; /* Space between buttons */
   }
 
   .btn {
-    width: 100%;
-    text-align: center;
+    width: 100%; /* Make buttons full width */
+    text-align: center; /* Center text in buttons */
   }
-
+  a.btn.btn-primary {
+    text-align: center;
+    justify-content: center;
+  }
+  .everyone-content {
+    flex-direction: column-reverse;
+    align-items: center;
+  }
+  .everyone-content .image img {
+    max-height: 500px;
+  }
   /* Add mobile menu toggle functionality */
   .nav-content.mobile-open .nav-links,
   .nav-content.mobile-open .nav-buttons {
@@ -1207,10 +1218,6 @@ button:active {
 
   .btn {
     padding: 8px 20px;
-  }
-
-  .content {
-    padding: 0 40px;
   }
 
   .started {
@@ -1233,7 +1240,7 @@ button:active {
     max-width: 30%;
   }
 
-  .how .flex img {
+  .how .flex img.it {
     max-width: 400px;
   }
 }
@@ -1385,19 +1392,13 @@ html {
 
   .how .flex .editit,
   .how .flex .shareit {
+    width: 95%;
+  }
+
+  .how .flex img.it {
+    max-width: 500px;
     width: 100%;
-  }
-
-  .how .flex img {
-    max-width: 100%;
     height: auto;
-  }
-}
-
-/* Content Container Responsive */
-@media (max-width: 900px) {
-  .content {
-    padding: 0 20px;
   }
 }
 
@@ -1537,13 +1538,13 @@ html {
 
   .how .flex .editit,
   .how .flex .shareit {
-    width: 100%;
+    width: 95%;
     max-width: 600px;
   }
 }
 
 .fallback-message {
-  display: none;
+  display: none; /* Default to hidden */
   position: fixed;
   top: 0;
   left: 0;
@@ -1556,36 +1557,26 @@ html {
   padding: 20px;
 }
 
-.fallback-content {
-  background: white;
-  padding: 30px;
-  border-radius: 15px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  max-width: 90%;
-  margin: 0 auto;
-}
-
-.fallback-content h2 {
-  color: #393540;
-  font-family: "PP Neue Montreal";
-  font-size: 24px;
-  margin-bottom: 15px;
-}
-
-.fallback-content p {
-  color: #666;
-  font-family: "PP Neue Montreal";
-  font-size: 16px;
-  line-height: 1.5;
-}
-
 @media (max-width: 770px) {
   .fallback-message {
-    display: flex;
+    display: flex; /* Show fallback message on small screens */
   }
 
-  #root > *:not(.fallback-message) {
-    display: none !important;
+  #root
+    > *:not(
+      .fallback-message,
+      .home,
+      .why,
+      .container,
+      .how,
+      .what,
+      .everyone,
+      .ready,
+      .footer,
+      .loader,
+      .navbar
+    ) {
+    display: none !important; /* Hide all other content */
   }
 }
 
@@ -3038,4 +3029,58 @@ html {
 .waitlist-page__submit:disabled {
   opacity: 0.7;
   cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .orbital-system {
+    max-width: 100%;
+    position: absolute;
+  }
+
+  .avatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  .orbit,
+  .orbital-dot {
+    display: none; /* Hide orbits and dots on mobile */
+  }
+
+  /* Reposition avatars for mobile view */
+  .avatar-1 {
+    top: 10%;
+    left: 30%;
+    transform: none;
+    z-index: 1;
+  }
+  .avatar-2 {
+    bottom: 10%;
+    z-index: 1;
+    left: 60%;
+    transform: none;
+  }
+  .avatar-3 {
+    left: 20%;
+    top: 60%;
+    z-index: 1;
+    transform: none;
+  }
+  .avatar-4 {
+    right: 20%;
+    top: 30%;
+    z-index: 1;
+    transform: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .orbital-system {
+    max-width: 300px;
+  }
+
+  .avatar {
+    width: 30px;
+    height: 30px;
+  }
 }
